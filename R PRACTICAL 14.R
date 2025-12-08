@@ -1,46 +1,45 @@
-# =============================================================================
-# R Script: Generating Basic Summaries
-# Functions: str() and summary()
-# Dataset: Retail Product Data (Simulated)
-# =============================================================================
+
+library(lubridate)
+library(dplyr)
 
 # 1. SETUP: Create Sample Data
-# We create a dataframe with mixed data types (Numeric, Character, Logical, NA)
-retail_df <- data.frame(
-  ID = 1:6,
-  Category = c("Electronics", "food", "Computer", "bike accessories", "Home", "Clothing"),
-  Price = c(500.50, 45.00, 900.00, NA, 300.00, 25.00),  # Note the NA
-  In_Stock = c(TRUE, TRUE, FALSE, TRUE, FALSE, TRUE),
-  Rating = c(4.7, 4.0, 5.0, 3.1, 2.9, 3.9),
+dates_df <- data.frame(
+  Event_ID = 1:4,
+  Date_String = c("2023-01-15", "2023-10-31", "2024-02-29", "2024-12-25"),
   stringsAsFactors = FALSE
 )
-print("--- Data Loaded ---")
-print(retail_df)
 
-# 2. USING str() (Structure)
-# Purpose: Compactly display the internal structure of the R object.
-print("--- OUTPUT OF str() ---")
-str(retail_df)
+# 2. PARSE AND EXTRACT
+processed_data <- dates_df %>%
+  mutate(
+    # A. Parsing: Tell R this text is a date (Year-Month-Day)
+    Actual_Date = ymd(Date_String),
+    
+    # B. Extraction Functions
+    Year_Num     = year(Actual_Date),                              # Extract Year
+    Month_Num    = month(Actual_Date),                             # Extract Month number (1-12)
+    Month_Name   = month(Actual_Date, label = TRUE, abbr = TRUE),  # Jan, Feb, ...
+    Day_Num      = day(Actual_Date),                               # Day of month (1-31)
+    Weekday_Num  = wday(Actual_Date),                              # Day of week (1 = Sunday, 7 = Saturday)
+    Weekday_Name = wday(Actual_Date, label = TRUE, abbr = FALSE),  # Full weekday name (Sunday, ...)
+    Quarter      = quarter(Actual_Date),                           # Fiscal quarter (1-4)
+    Day_of_Year  = yday(Actual_Date)                               # Day count in year (1-366)
+  )
 
-# 3. USING summary() (Statistical Summary)
-# Purpose: detailed summary statistics for each column.
-print("--- OUTPUT OF summary() [Before Factor Conversion] ---")
-summary(retail_df)
+# Check for any parsing failures
+if (any(is.na(processed_data$Actual_Date))) {
+  warning("Some Date_String values failed to parse into Actual_Date. Check input values.")
+}
 
-# 4. IMPROVING summary() WITH FACTORS
-# By default Category is character here; convert to factor to get counts per level.
-print("--- Category counts (before factor conversion) ---")
-print(table(retail_df$Category))
+print("--- Data with Extracted Date Components ---")
+print(processed_data)
 
-retail_df$Category <- as.factor(retail_df$Category)
-print("--- OUTPUT OF summary() [After Factor Conversion] ---")
-summary(retail_df)
+# 3. System Date : Handling "Now"
+# Use explicit timezone if you want deterministic output, otherwise system timezone is used
+current_time <- now(tzone = Sys.timezone())
 
-# 5. Accessing Specific Summaries
-# Sometimes you only want single values; use na.rm = TRUE when needed.
-avg_rating <- mean(retail_df$Rating, na.rm = TRUE)
-max_price  <- max(retail_df$Price, na.rm = TRUE)  # na.rm ignores the missing value
-
-print(sprintf("Average Rating: %.2f", avg_rating))
-print(sprintf("Highest Price: %.2f", max_price))
+print("--- Current Time Extraction ---")
+print(paste("Current Year:", year(current_time)))
+print(paste("Current Hour:", hour(current_time)))
+print(paste("Current Minute:", minute(current_time)))
 
