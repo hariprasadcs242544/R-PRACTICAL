@@ -1,15 +1,20 @@
 print("Name: S126 Hariprasad")
 
-# Use file.choose() to select your CSV file manually
+# 1. Select the 'Most Runs - 2020.csv' file manually
 data <- read.csv(file.choose())
 
-# Perform Two-Way ANOVA
-# Formula: numeric ~ category1 + category2
-# This tests the effect of both 'Against' and 'Venue' on 'Runs'
-anova_result <- aov(Runs ~ Against + Venue, data = data)
+# 2. Prepare the data
+# Convert '100' and '50' columns into Factors (Categories) for ANOVA
+# This allows us to see if having a 100 or a 50 significantly impacts total Runs
+data$Has_100 <- as.factor(ifelse(data$X100 > 0, "Yes", "No"))
+data$Has_50 <- as.factor(ifelse(data$X50 > 0, "Yes", "No"))
 
-# View the ANOVA table results
+# 3. Perform Two-Way ANOVA
+# Aim: Test if total 'Runs' are affected by scoring a Century and/or a Half-Century
+anova_result <- aov(Runs ~ Has_100 * Has_50, data = data)
+
+# 4. View the ANOVA table results
 summary(anova_result)
 
-# Preview the dataset
-head(data)
+# 5. Preview the processed data
+head(data[, c("Player", "Runs", "Has_100", "Has_50")])
